@@ -450,10 +450,12 @@ def get_args(args=None) -> ScriptArguments:
         suffix="",
         environment=EnvironmentArguments(
             image_name="sweagent/swe-agent:latest",
-            data_path="princeton-nlp/SWE-bench_Lite",
+            # data_path="princeton-nlp/SWE-bench_Lite",
+            data_path="https://github.com/pvlib/pvlib-python/issues/1603",
             split="dev",
             verbose=True,
             install_environment=True,
+            cache_task_images=False,
         ),
         skip_existing=True,
         agent=AgentArguments(

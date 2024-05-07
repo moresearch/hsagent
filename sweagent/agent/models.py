@@ -231,7 +231,7 @@ class OpenAIModel(BaseModel):
             self.client = AzureOpenAI(api_key=cfg["AZURE_OPENAI_API_KEY"], azure_endpoint=cfg["AZURE_OPENAI_ENDPOINT"], api_version=cfg.get("AZURE_OPENAI_API_VERSION", "2024-02-01"))
         else:
             api_base_url: Optional[str] = cfg.get("OPENAI_API_BASE_URL", None)
-            self.client = OpenAI(api_key=cfg["OPENAI_API_KEY"], base_url=api_base_url)
+            # self.client = OpenAI(api_key=cfg["OPENAI_API_KEY"], base_url=api_base_url)
 
     def history_to_messages(
         self, history: list[dict[str, str]], is_demonstration: bool = False
@@ -261,19 +261,25 @@ class OpenAIModel(BaseModel):
         """
         try:
             # Perform OpenAI API call
-            response = self.client.chat.completions.create(
-                messages=self.history_to_messages(history),
-                model=self.api_model,
-                temperature=self.args.temperature,
-                top_p=self.args.top_p,
-            )
+            from dspygen.utils.dspy_tools import init_ol
+            import dspy
+            init_ol()
+            response = dspy.ChainOfThought("messages -> response")(messages=str(self.history_to_messages(history))).response
+            from loguru import logger
+            logger.info(response)
+            # response = self.client.chat.completions.create(
+            #     messages=self.history_to_messages(history),
+            #     model=self.api_model,
+            #     temperature=self.args.temperature,
+            #     top_p=self.args.top_p,
+            # )
         except BadRequestError:
             raise CostLimitExceededError(f"Context window ({self.model_metadata['max_context']} tokens) exceeded")
         # Calculate + update costs, return response
-        input_tokens = response.usage.prompt_tokens
-        output_tokens = response.usage.completion_tokens
-        self.update_stats(input_tokens, output_tokens)
-        return response.choices[0].message.content
+        # input_tokens = response.usage.prompt_tokens
+        # output_tokens = response.usage.completion_tokens
+        # self.update_stats(input_tokens, output_tokens)
+        return response  # .choices[0].message.content
 
 
 class AnthropicModel(BaseModel):
