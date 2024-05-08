@@ -4,6 +4,8 @@ import logging
 
 from dataclasses import dataclass
 from pathlib import Path
+
+import dspy
 from simple_parsing.helpers.fields import field
 from simple_parsing.helpers.serialization.serializable import FrozenSerializable
 from simple_parsing.helpers.flatten import FlattenedAccess
@@ -245,10 +247,27 @@ class AgentHook:
         ...
 
 
+import dspy
+
+class PredictCommandSignature(dspy.Signature):
+    """
+    Predict the most appropriate command based on the provided setting, available commands, and the desired response format.
+    """
+    setting = dspy.InputField(desc="Context or environment where the command is to be executed.")
+    commands = dspy.InputField(desc="List of possible commands available for execution.")
+    response_format = dspy.InputField(desc="Preferred format for the response, such as plain text, JSON, etc.")
+
+    discussion = dspy.OutputField(desc="Discussion or reasoning behind choosing a particular command.")
+    chosen_command = dspy.OutputField(desc="The command selected as the most appropriate for the given setting.")
+
+
+
+
 class Agent:
     """Agent handles the behaviour of the model and how it interacts with the environment."""
 
     def __init__(self, name: str, args: AgentArguments):
+        self.command_pred = dspy.Predict(PredictCommandSignature)
         self.name = name
         self.model = get_model(
             args.model, args.config._commands + args.config.subroutine_types

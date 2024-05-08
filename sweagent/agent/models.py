@@ -264,6 +264,8 @@ class OpenAIModel(BaseModel):
             from dspygen.utils.dspy_tools import init_ol
             import dspy
             init_ol()
+            import pyperclip
+            pyperclip.copy(str(history))
             response = dspy.ChainOfThought("messages -> response")(messages=str(self.history_to_messages(history))).response
             from loguru import logger
             logger.info(response)
